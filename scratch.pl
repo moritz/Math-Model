@@ -60,10 +60,17 @@ my %model = {
             my %params = params-for($d);
             $d(|%params);
         };
-        say @res.perl;
+        @res;
     }
-    derivatives(0, @initial);
-    
+
+    adaptive-rk-integrate(
+        :from(0),
+        :to(10),
+        :@initial,
+        :derivative(&derivatives),
+        :max-stepsize(0.2),
+        :do(->$t, @v { say "$t\t@v[]"}),
+    );
 }
 
 # vim: ft=perl6
