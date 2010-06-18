@@ -10,6 +10,8 @@ has %.initials;
 has @.captures is rw;
 has %!deriv-keying =  %.derivatives.keys Z=> 0..Inf;
 
+has %.results;
+
 my sub param-names(&c) {
     &c.signature.params».name».substr(1).grep: * !eq '_';
 }
@@ -43,7 +45,6 @@ method integrate($from = 0, $to = 10, $min-resolution = ($to - $from) / 20) {
 
 
     sub derivatives($time, @values) {
-
         my @res = @values.keys.map: -> $i {
             my $d      = @derivs[$i];
             my %params = self!params-for($d, $time, @values);
@@ -52,14 +53,25 @@ method integrate($from = 0, $to = 10, $min-resolution = ($to - $from) / 20) {
         @res;
     }
 
+    for @.captures {
+        %!results{$_} = [];
+    }
+
+    sub record($time, @values) {
+        for @.captures {
+            %!results{$_}.push: self!value-for-name($time, $_, @values);
+        }
+    }
+
     adaptive-rk-integrate(
         :$from,
         :$to,
         :@initial,
         :derivative(&derivatives),
         :max-stepsize($min-resolution),
-        :do(->$t, @v { say "$t\t@v[]"}),
+        :do(&record),
     );
+    say %!results.perl;
 }
 
 # vim: ft=perl6
