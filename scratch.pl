@@ -4,7 +4,7 @@ BEGIN { @*INC.push: 'lib' };
 use Math::Model;;
 
 
-model(
+my $m = Math::Model.new(
     derivatives => {
         force       => { $:mass * $:velocity },
         velocity    => { $:height },
@@ -17,5 +17,7 @@ model(
         force       => 10,
         velocity    => 0,
     },
+    captures    => <height velocity force>,
 );
 
+$m.integrate;

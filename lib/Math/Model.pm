@@ -1,17 +1,22 @@
 use v6;
 
-module Math::Model;
+class Math::Model;
 
 use Math::RungeKutta;
 
-sub model(:%derivatives, :%variables, :%initials) is export {
-    my %deriv-keying = %derivatives.keys Z=> 0..Inf;
+has %.derivatives;
+has %.variables;
+has %.initials;
+has @.captures;
+
+method integrate {
+    my %deriv-keying = %.derivatives.keys Z=> 0..Inf;
     my @derivs;
     my @initial;
-    for %initials.pairs {
+    for %.initials.pairs {
         @initial[%deriv-keying{.key}] = .value;
     }
-    for %derivatives.pairs {
+    for %.derivatives.pairs {
         @derivs[%deriv-keying{.key}]  = .value;
     }
 
@@ -26,10 +31,10 @@ sub model(:%derivatives, :%variables, :%initials) is export {
                 my $value;
                 if $p eq 'time' {
                     $value = $time;
-                } elsif %derivatives.exists($p) {
+                } elsif %.derivatives.exists($p) {
                     $value = @values[%deriv-keying{$p}];
-                } elsif %variables.exists($p) {
-                    my $c = %variables{$p};
+                } elsif %.variables.exists($p) {
+                    my $c = %.variables{$p};
                     $value = $c.(|params-for($c));
                 } else {
                     die "Don't know where to get '$p' from.";
