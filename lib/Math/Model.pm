@@ -9,7 +9,7 @@ has %.variables;
 has %.initials;
 has @.captures;
 
-method integrate {
+method integrate($from = 0, $to = 10) {
     my %deriv-keying = %.derivatives.keys Z=> 0..Inf;
     my @derivs;
     my @initial;
@@ -52,8 +52,8 @@ method integrate {
     }
 
     adaptive-rk-integrate(
-        :from(0),
-        :to(10),
+        :$from,
+        :$to,
         :@initial,
         :derivative(&derivatives),
         :max-stepsize(0.2),
