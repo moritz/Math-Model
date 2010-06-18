@@ -8,21 +8,17 @@ has %.derivatives;
 has %.variables;
 has %.initials;
 has @.captures is rw;
+has %!deriv-keying =  %.derivatives.keys Z=> 0..Inf;
 
 my sub param-names(&c) {
     &c.signature.params».name».substr(1).grep: * !eq '_';
 }
 
 method integrate($from = 0, $to = 10, $min-resolution = ($to - $from) / 20) {
-    my %deriv-keying = %.derivatives.keys Z=> 0..Inf;
     my @derivs;
     my @initial;
-    for %.initials.pairs {
-        @initial[%deriv-keying{.key}] = .value;
-    }
-    for %.derivatives.pairs {
-        @derivs[%deriv-keying{.key}]  = .value;
-    }
+    @initial[%!deriv-keying{.key}] = .value for %.initials.pairs;
+    @derivs[%!deriv-keying{.key}]  = .value for %.derivatives.pairs;
 
 
     sub derivatives($time, @values) {
@@ -33,7 +29,7 @@ method integrate($from = 0, $to = 10, $min-resolution = ($to - $from) / 20) {
                 if $p eq 'time' {
                     $value = $time;
                 } elsif %.derivatives.exists($p) {
-                    $value = @values[%deriv-keying{$p}];
+                    $value = @values[%!deriv-keying{$p}];
                 } elsif %.variables.exists($p) {
                     my $c = %.variables{$p};
                     $value = $c.(|params-for($c));
