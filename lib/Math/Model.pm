@@ -14,6 +14,27 @@ my sub param-names(&c) {
     &c.signature.params».name».substr(1).grep: * !eq '_';
 }
 
+method !params-for(&c, $time, @values) {
+    my %params;
+    for param-names(&c) -> $p {
+        %params{$p} = self!value-for-name($time, $p, @values);
+    }
+    return %params;
+}
+
+method !value-for-name($time, $name, @values) {
+    if $name eq 'time' {
+        return $time;
+    } elsif %.derivatives.exists($name) {
+        return @values[%!deriv-keying{$name}];
+    } elsif %.variables.exists($name) {
+        my $c = %.variables{$name};
+        return $c.(|self!params-for($c, $time, @values));
+    } else {
+        die "Don't know where to get '$name' from.";
+    }
+}
+
 method integrate($from = 0, $to = 10, $min-resolution = ($to - $from) / 20) {
     my @derivs;
     my @initial;
@@ -22,27 +43,10 @@ method integrate($from = 0, $to = 10, $min-resolution = ($to - $from) / 20) {
 
 
     sub derivatives($time, @values) {
-        my sub params-for(&c) {
-            my %params;
-            for param-names(&c) -> $p {
-                my $value;
-                if $p eq 'time' {
-                    $value = $time;
-                } elsif %.derivatives.exists($p) {
-                    $value = @values[%!deriv-keying{$p}];
-                } elsif %.variables.exists($p) {
-                    my $c = %.variables{$p};
-                    $value = $c.(|params-for($c));
-                } else {
-                    die "Don't know where to get '$p' from.";
-                }
-                %params{$p} = $value;
-            }
-            return %params;
-        }
+
         my @res = @values.keys.map: -> $i {
             my $d      = @derivs[$i];
-            my %params = params-for($d);
+            my %params = self!params-for($d, $time, @values);
             $d(|%params);
         };
         @res;
