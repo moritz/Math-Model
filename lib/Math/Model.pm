@@ -7,9 +7,13 @@ use Math::RungeKutta;
 has %.derivatives;
 has %.variables;
 has %.initials;
-has @.captures;
+has @.captures is rw;
 
-method integrate($from = 0, $to = 10) {
+my sub param-names(&c) {
+    &c.signature.params».name».substr(1).grep: * !eq '_';
+}
+
+method integrate($from = 0, $to = 10, $min-resolution = ($to - $from) / 20) {
     my %deriv-keying = %.derivatives.keys Z=> 0..Inf;
     my @derivs;
     my @initial;
@@ -20,9 +24,6 @@ method integrate($from = 0, $to = 10) {
         @derivs[%deriv-keying{.key}]  = .value;
     }
 
-    my sub param-names(&c) {
-        &c.signature.params».name».substr(1).grep: * !eq '_';
-    }
 
     sub derivatives($time, @values) {
         my sub params-for(&c) {
@@ -56,7 +57,7 @@ method integrate($from = 0, $to = 10) {
         :$to,
         :@initial,
         :derivative(&derivatives),
-        :max-stepsize(0.2),
+        :max-stepsize($min-resolution),
         :do(->$t, @v { say "$t\t@v[]"}),
     );
 }

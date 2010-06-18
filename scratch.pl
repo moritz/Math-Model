@@ -20,4 +20,4 @@ my $m = Math::Model.new(
     captures    => <height velocity force>,
 );
 
-$m.integrate(:to(5));
+$m.integrate(:to(5), :min-resolution(0.5));
