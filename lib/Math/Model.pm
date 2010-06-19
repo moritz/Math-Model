@@ -73,7 +73,6 @@ method integrate($from = 0, $to = 10, $min-resolution = ($to - $from) / 20) {
             %!current-values{$_} = $c.(|self!params-for($c));
         }
     }
-    update-current-values($from, %.initials{@!deriv-names});
 
     my @initial = %.initials{@!deriv-names};
 
@@ -102,6 +101,8 @@ method integrate($from = 0, $to = 10, $min-resolution = ($to - $from) / 20) {
             %!results{$_}.push: %!current-values{$_};;
         }
     }
+
+    record($from, %.initials{@!deriv-names});
 
     adaptive-rk-integrate(
         :$from,
