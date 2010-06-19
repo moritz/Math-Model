@@ -52,31 +52,27 @@ method topo-sort(*@a) {
 
 
 method integrate($from = 0, $to = 10, $min-resolution = ($to - $from) / 20) {
+    my %inv = %.derivatives.invert;
     for %.derivatives -> $d {
         die "There must be a variable defined for each derivative, missiing for '$d.key()'"
-            unless %.variables.exists($d.key);
-        die "There must be an initial value defined for each derivative target, missiing for '$d.value()'"
+            unless %.variables.exists($d.key) || %inv.exists($d.key);
+        die "There must be an initial value defined for each derivative target, missing for '$d.value()'"
             unless %.initials.exists($d.value);
     }
 
-    my %vars            = %.variables.pairs.grep: { ! %!derivatives.exists(.key) };
-    say %vars.keys.perl;
+    my %vars            = %.variables.pairs.grep: { ! %inv.exists(.key) };
 
     %!current-values       = %.initials;
     %!current-values<time> = $from;
 
     my @vars-topo          = @.topo-sort(%vars.keys);
-    say @vars-topo.perl;
     sub update-current-values($time, @values) {
         %!current-values<time>          = $time;
-        %!current-values{@!deriv-names} = @values;
-        # TODO: topologically sort %vars.keys, and transverse in
-        # correct order
+        %!current-values{%.derivatives{@!deriv-names}} = @values;
         for @vars-topo {
             my $c = %vars{$_};
             %!current-values{$_} = $c.(|self!params-for($c));
         }
-
     }
 
     update-current-values($from, %.initials{@!deriv-names});
@@ -85,7 +81,16 @@ method integrate($from = 0, $to = 10, $min-resolution = ($to - $from) / 20) {
 
     sub derivatives($time, @values) {
         update-current-values($time, @values);
-        %.variables{@!deriv-names}.map: { $_(|self!params-for($_)) };
+        my @r;
+        for @!deriv-names {
+            my $v = %.variables{$_};
+            if defined $v {
+                @r.push: $v(|self!params-for($v));
+            } else {
+                @r.push: %!current-values{$_};
+            }
+        }
+        @r;
     }
 
     @!time = ();
@@ -118,6 +123,7 @@ method render-svg($filename) {
     my $f = open $filename, :w
             or die "Can't open file '$filename' for writing: $!";
     my @data = map { %!results{$_} }, @.captures;
+    say %!results.perl;
     my $svg = SVG::Plot.new(
         width   => 800,
         height  => 600,

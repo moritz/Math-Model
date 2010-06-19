@@ -7,19 +7,15 @@ use Math::Model;
 my $m = Math::Model.new(
     derivatives => {
         velocity    => 'height',
-        force       => 'momentum'
     },
     variables   => {
-        mass        => { 1 },
-        velocity    => { $:force / $:mass },
-        force       => { -$:height },
+        velocity    => { 1 },
     },
     initials    => {
-        height      => 1,
-        momentum    => 0,
+        height      => 0,
     },
-    captures    => <height velocity force>,
+    captures    => <height velocity>,
 );
 
-$m.integrate(:to(5), :min-resolution(0.5));
+$m.integrate(:to(2), :min-resolution(0.5));
 $m.render-svg('spring.svg');
