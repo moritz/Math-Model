@@ -11,7 +11,19 @@ has %.derivatives;
 has %.variables;
 has %.initials;
 has @.captures is rw;
-has %!deriv-keying =  %.derivatives.keys Z=> 0..Inf;
+
+has %!inv = %.derivatives.invert;
+# in Math::Model all variables are accessible by name
+# in contrast Math::RungeKutta uses vectors, so we need
+# to define an (arbitrary) ordering
+# @!deriv-names holds the names of the derivatives in a fixed
+# order, sod @!deriv-names[$number] turns the number into a name
+# %!deriv-keying{$name} translates a name into the corresponding index
+has @!deriv-names  =  %!inv.keys;
+has %!deriv-keying =  @!deriv-names Z=> 0..Inf;
+
+# snapshot of all variables in the current model
+has %!current-values;
 
 has %.results;
 has @.time;
@@ -20,53 +32,75 @@ my sub param-names(&c) {
     &c.signature.params».name».substr(1).grep: * !eq '_';
 }
 
-method !params-for(&c, $time, @values) {
-    my %params;
-    for param-names(&c) -> $p {
-        %params{$p} = self!value-for-name($time, $p, @values);
-    }
-    return %params;
+method !params-for(&c) {
+    param-names(&c).map( {; $_ => %!current-values{$_} } ).hash;
 }
 
-method !value-for-name($time, $name, @values) {
-    if $name eq 'time' {
-        return $time;
-    } elsif %.derivatives.exists($name) {
-        return @values[%!deriv-keying{$name}];
-    } elsif %.variables.exists($name) {
-        my $c = %.variables{$name};
-        return $c.(|self!params-for($c, $time, @values));
-    } else {
-        die "Don't know where to get '$name' from.";
+method topo-sort(*@a) {
+    my %seen;
+    my @order;
+    sub topo(*@a) {
+        for @a {
+            die "Circular dependency involving $_" if %seen{$_};
+            topo(param-names(%.variables{$_})) unless %.derivatives.exists($_);
+            @order.push: $_ unless %seen{$_};
+            ++%seen{$_};
+        }
     }
+    topo(@a);
+    @order;
 }
+
 
 method integrate($from = 0, $to = 10, $min-resolution = ($to - $from) / 20) {
-    my @derivs;
-    my @initial;
-    @initial[%!deriv-keying{.key}] = .value for %.initials.pairs;
-    @derivs[%!deriv-keying{.key}]  = .value for %.derivatives.pairs;
+    for %.derivatives -> $d {
+        die "There must be a variable defined for each derivative, missiing for '$d.key()'"
+            unless %.variables.exists($d.key) || %!inv.exists($d.key);
+        die "There must be an initial value defined for each derivative target, missing for '$d.value()'"
+            unless %.initials.exists($d.value);
+    }
 
+    my %vars               = %.variables.pairs.grep: { ! %!inv.exists(.key) };
+
+    %!current-values       = %.initials;
+    %!current-values<time> = $from;
+
+    my @vars-topo          = @.topo-sort(%vars.keys);
+    sub update-current-values($time, @values) {
+        %!current-values<time>          = $time;
+        %!current-values{@!deriv-names} = @values;
+        for @vars-topo {
+            my $c = %vars{$_};
+            %!current-values{$_} = $c.(|self!params-for($c));
+        }
+    }
+    update-current-values($from, %.initials{@!deriv-names});
+
+    my @initial = %.initials{@!deriv-names};
 
     sub derivatives($time, @values) {
-        my @res = @values.keys.map: -> $i {
-            my $d      = @derivs[$i];
-            my %params = self!params-for($d, $time, @values);
-            $d(|%params);
-        };
-        @res;
+        update-current-values($time, @values);
+        my @r;
+        for %!inv{@!deriv-names} {
+            my $v = %.variables{$_};
+            @r.push: defined $v
+                ?? $v(|self!params-for($v))
+                !! %!current-values{$_};
+        }
+        @r;
     }
 
     @!time = ();
     for @.captures {
-        say "Initializing record for '$_'";
         %!results{$_} = [];
     }
 
     sub record($time, @values) {
+        update-current-values($time, @values);
         @!time.push: $time;
-        for @.captures.flat {
-            %!results{$_}.push: self!value-for-name($time, $_, @values);
+
+        for @.captures {
+            %!results{$_}.push: %!current-values{$_};;
         }
     }
 

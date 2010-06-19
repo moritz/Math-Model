@@ -6,18 +6,17 @@ use Math::Model;
 
 my $m = Math::Model.new(
     derivatives => {
-        force       => { $:mass * $:velocity },
-        velocity    => { $:height },
+        velocity     => 'height',
+        acceleration => 'velocity',
     },
     variables   => {
-        mass        => { 1 },
-        height      => { -$:force },
+        acceleration    => { -$:height },
     },
     initials    => {
-        force       => 1,
+        height      => 1,
         velocity    => 0,
     },
-    captures    => <height velocity force>,
+    captures    => <height velocity acceleration>,
 );
 
 $m.integrate(:to(5), :min-resolution(0.5));
