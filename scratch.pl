@@ -6,16 +6,17 @@ use Math::Model;
 
 my $m = Math::Model.new(
     derivatives => {
-        force       => { $:mass * $:velocity },
-        velocity    => { $:height },
+        velocity    => 'height',
+        force       => 'momentum'
     },
     variables   => {
         mass        => { 1 },
-        height      => { -$:force },
+        velocity    => { $:force / $:mass },
+        force       => { -$:height },
     },
     initials    => {
-        force       => 1,
-        velocity    => 0,
+        height      => 1,
+        momentum    => 0,
     },
     captures    => <height velocity force>,
 );
