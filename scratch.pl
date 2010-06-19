@@ -1,7 +1,7 @@
 use v6;
 BEGIN { @*INC.push: 'lib' };
 
-use Math::Model;;
+use Math::Model;
 
 
 my $m = Math::Model.new(
@@ -21,3 +21,4 @@ my $m = Math::Model.new(
 );
 
 $m.integrate(:to(5), :min-resolution(0.5));
+$m.render-svg('spring.svg');

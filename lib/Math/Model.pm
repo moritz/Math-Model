@@ -3,6 +3,9 @@ use v6;
 class Math::Model;
 
 use Math::RungeKutta;
+# TODO: only load when needed
+use SVG;
+use SVG::Plot;
 
 has %.derivatives;
 has %.variables;
@@ -11,6 +14,7 @@ has @.captures is rw;
 has %!deriv-keying =  %.derivatives.keys Z=> 0..Inf;
 
 has %.results;
+has @.time;
 
 my sub param-names(&c) {
     &c.signature.params».name».substr(1).grep: * !eq '_';
@@ -53,12 +57,15 @@ method integrate($from = 0, $to = 10, $min-resolution = ($to - $from) / 20) {
         @res;
     }
 
+    @!time = ();
     for @.captures {
+        say "Initializing record for '$_'";
         %!results{$_} = [];
     }
 
     sub record($time, @values) {
-        for @.captures {
+        @!time.push: $time;
+        for @.captures.flat {
             %!results{$_}.push: self!value-for-name($time, $_, @values);
         }
     }
@@ -71,7 +78,23 @@ method integrate($from = 0, $to = 10, $min-resolution = ($to - $from) / 20) {
         :max-stepsize($min-resolution),
         :do(&record),
     );
-    say %!results.perl;
+    %!results;
+}
+
+method render-svg($filename) {
+    my $f = open $filename, :w
+            or die "Can't open file '$filename' for writing: $!";
+    my @data = map { %!results{$_} }, @.captures;
+    my $svg = SVG::Plot.new(
+        width   => 800,
+        height  => 600,
+        x       => @!time,
+        values  => @data,
+        title   => 'Model output',
+    ).plot(:xy-lines);
+    $f.say(SVG.serialize($svg));
+    $f.close;
+    say "Wrote ouput to '$filename'";
 }
 
 # vim: ft=perl6
