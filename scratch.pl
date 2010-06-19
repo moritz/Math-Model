@@ -10,11 +10,11 @@ my $m = Math::Model.new(
         velocity    => { $:height },
     },
     variables   => {
-        mass        => { 10 },
+        mass        => { 1 },
         height      => { -$:force },
     },
     initials    => {
-        force       => 10,
+        force       => 1,
         velocity    => 0,
     },
     captures    => <height velocity force>,
