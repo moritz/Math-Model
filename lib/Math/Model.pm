@@ -12,13 +12,14 @@ has %.variables;
 has %.initials;
 has @.captures is rw;
 
+has %!inv = %.derivatives.invert;
 # in Math::Model all variables are accessible by name
 # in contrast Math::RungeKutta uses vectors, so we need
 # to define an (arbitrary) ordering
 # @!deriv-names holds the names of the derivatives in a fixed
 # order, sod @!deriv-names[$number] turns the number into a name
 # %!deriv-keying{$name} translates a name into the corresponding index
-has @!deriv-names  =  %.derivatives.keys;
+has @!deriv-names  =  %!inv.keys;
 has %!deriv-keying =  @!deriv-names Z=> 0..Inf;
 
 # snapshot of all variables in the current model
@@ -52,15 +53,15 @@ method topo-sort(*@a) {
 
 
 method integrate($from = 0, $to = 10, $min-resolution = ($to - $from) / 20) {
-    my %inv = %.derivatives.invert;
     for %.derivatives -> $d {
         die "There must be a variable defined for each derivative, missiing for '$d.key()'"
-            unless %.variables.exists($d.key) || %inv.exists($d.key);
+            unless %.variables.exists($d.key) || %!inv.exists($d.key);
         die "There must be an initial value defined for each derivative target, missing for '$d.value()'"
             unless %.initials.exists($d.value);
     }
 
-    my %vars            = %.variables.pairs.grep: { ! %inv.exists(.key) };
+    my %vars               = %.variables.pairs.grep: { ! %!inv.exists(.key) };
+    say "Vars: %vars.perl()";
 
     %!current-values       = %.initials;
     %!current-values<time> = $from;
@@ -68,14 +69,16 @@ method integrate($from = 0, $to = 10, $min-resolution = ($to - $from) / 20) {
     my @vars-topo          = @.topo-sort(%vars.keys);
     sub update-current-values($time, @values) {
         %!current-values<time>          = $time;
-        %!current-values{%.derivatives{@!deriv-names}} = @values;
+        %!current-values{@!deriv-names} = @values;
         for @vars-topo {
             my $c = %vars{$_};
             %!current-values{$_} = $c.(|self!params-for($c));
         }
     }
-
+    say "Deriv names: @!deriv-names.perl()";
+    say "Start values: %.initials{@!deriv-names}.perl()";
     update-current-values($from, %.initials{@!deriv-names});
+    say "Start values: %!current-values.perl()";
 
     my @initial = %.initials{@!deriv-names};
 
@@ -90,6 +93,7 @@ method integrate($from = 0, $to = 10, $min-resolution = ($to - $from) / 20) {
                 @r.push: %!current-values{$_};
             }
         }
+        say "Derivatives at time $time: @r.perl()";
         @r;
     }
 
