@@ -28,6 +28,8 @@ has %!current-values;
 has %.results;
 has @.time;
 
+has $.numeric-error is rw = 0.0001;
+
 my sub param-names(&c) {
     &c.signature.params».name».substr(1).grep: * !eq '_';
 }
@@ -111,6 +113,7 @@ method integrate($from = 0, $to = 10, $min-resolution = ($to - $from) / 20) {
         :derivative(&derivatives),
         :max-stepsize($min-resolution),
         :do(&record),
+        :epsilon($.numeric-error),
     );
     %!results;
 }

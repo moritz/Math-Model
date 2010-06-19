@@ -12,7 +12,7 @@ my $m = Math::Model.new(
     variables   => {
         acceleration    => { $:force / $:mass },
         mass            => { 1 },
-        force           => { - $:height }
+        force           => { - $:height - 0.2 * $:velocity * abs($:velocity) }
     },
     initials    => {
         height      => 1,
@@ -21,5 +21,5 @@ my $m = Math::Model.new(
     captures    => <height velocity acceleration>,
 );
 
-$m.integrate(:to(10), :min-resolution(0.5));
+$m.integrate(:from(0), :to(100), :min-resolution(1));
 $m.render-svg('spring.svg');
