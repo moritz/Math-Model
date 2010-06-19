@@ -36,18 +36,19 @@ method !params-for(&c) {
     param-names(&c).map( {; $_ => %!current-values{$_} } ).hash;
 }
 
-method topo-sort(*@a) {
+method topo-sort(*@vars) {
     my %seen;
     my @order;
     sub topo(*@a) {
         for @a {
-            die "Circular dependency involving $_" if %seen{$_};
-            topo(param-names(%.variables{$_})) unless %.derivatives.exists($_);
-            @order.push: $_ unless %seen{$_};
-            ++%seen{$_};
+            next if %!inv.exists($_) or %seen{$_};
+            topo(param-names(%.variables{$_}));
+            @order.push: $_;
+            %seen{$_}++;
         }
     }
-    topo(@a);
+    topo(@vars);
+#    say @order.perl;
     @order;
 }
 
@@ -60,17 +61,15 @@ method integrate($from = 0, $to = 10, $min-resolution = ($to - $from) / 20) {
             unless %.initials.exists($d.value);
     }
 
-    my %vars               = %.variables.pairs.grep: { ! %!inv.exists(.key) };
-
     %!current-values       = %.initials;
     %!current-values<time> = $from;
 
-    my @vars-topo          = @.topo-sort(%vars.keys);
+    my @vars-topo          = self.topo-sort(%.variables.keys);
     sub update-current-values($time, @values) {
         %!current-values<time>          = $time;
         %!current-values{@!deriv-names} = @values;
         for @vars-topo {
-            my $c = %vars{$_};
+            my $c = %.variables{$_};
             %!current-values{$_} = $c.(|self!params-for($c));
         }
     }
