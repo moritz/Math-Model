@@ -61,7 +61,6 @@ method integrate($from = 0, $to = 10, $min-resolution = ($to - $from) / 20) {
     }
 
     my %vars               = %.variables.pairs.grep: { ! %!inv.exists(.key) };
-    say "Vars: %vars.perl()";
 
     %!current-values       = %.initials;
     %!current-values<time> = $from;
@@ -75,31 +74,24 @@ method integrate($from = 0, $to = 10, $min-resolution = ($to - $from) / 20) {
             %!current-values{$_} = $c.(|self!params-for($c));
         }
     }
-    say "Deriv names: @!deriv-names.perl()";
-    say "Start values: %.initials{@!deriv-names}.perl()";
     update-current-values($from, %.initials{@!deriv-names});
-    say "Start values: %!current-values.perl()";
 
     my @initial = %.initials{@!deriv-names};
 
     sub derivatives($time, @values) {
         update-current-values($time, @values);
         my @r;
-        for @!deriv-names {
+        for %!inv{@!deriv-names} {
             my $v = %.variables{$_};
-            if defined $v {
-                @r.push: $v(|self!params-for($v));
-            } else {
-                @r.push: %!current-values{$_};
-            }
+            @r.push: defined $v
+                ?? $v(|self!params-for($v))
+                !! %!current-values{$_};
         }
-        say "Derivatives at time $time: @r.perl()";
         @r;
     }
 
     @!time = ();
     for @.captures {
-        say "Initializing record for '$_'";
         %!results{$_} = [];
     }
 
@@ -127,7 +119,6 @@ method render-svg($filename) {
     my $f = open $filename, :w
             or die "Can't open file '$filename' for writing: $!";
     my @data = map { %!results{$_} }, @.captures;
-    say %!results.perl;
     my $svg = SVG::Plot.new(
         width   => 800,
         height  => 600,

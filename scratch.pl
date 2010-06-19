@@ -19,5 +19,5 @@ my $m = Math::Model.new(
     captures    => <height velocity acceleration>,
 );
 
-$m.integrate(:to(2), :min-resolution(0.5));
+$m.integrate(:to(5), :min-resolution(0.5));
 $m.render-svg('spring.svg');
