@@ -22,4 +22,4 @@ my $m = Math::Model.new(
 );
 
 $m.integrate(:from(0), :to(20), :min-resolution(1));
-$m.render-svg('spring.svg', :x-axis('time'));
+$m.render-svg('spring.svg', :title('Spring with damping'));
