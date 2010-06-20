@@ -12,13 +12,14 @@ my $m = Math::Model.new(
     variables   => {
         acceleration    => { $:force / $:mass },
         mass            => { 1 },
-        force           => { - $:height - 0.2 * $:velocity * abs($:velocity) }
+        force           => { - $:height - 0.2 * $:velocity * abs($:velocity) + $:generator },
+        generator       => { 0.1 * sin(2.05 * pi * $:time) },
     },
     initials    => {
         height      => 1,
         velocity    => 0,
     },
-    captures    => <height velocity acceleration>,
+    captures    => [<height>],
 );
 
 $m.integrate(:from(0), :to(100), :min-resolution(1));

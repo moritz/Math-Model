@@ -43,7 +43,7 @@ method topo-sort(*@vars) {
     my @order;
     sub topo(*@a) {
         for @a {
-            next if %!inv.exists($_) or %seen{$_};
+            next if %!inv.exists($_) || %seen{$_} || $_ eq 'time';
             topo(param-names(%.variables{$_}));
             @order.push: $_;
             %seen{$_}++;
