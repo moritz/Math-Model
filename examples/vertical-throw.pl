@@ -22,4 +22,4 @@ my $m = Math::Model.new(
 );
 
 $m.integrate(:from(0), :to(4.2), :min-resolution(0.2));
-$m.render-svg('throw-vertically.svg', :x-axis('time'));
+$m.render-svg('throw-vertically.svg', :title('vertical throwing'));
