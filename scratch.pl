@@ -21,5 +21,5 @@ my $m = Math::Model.new(
     captures    => <height>,
 );
 
-$m.integrate(:from(0), :to(50), :min-resolution(1));
-$m.render-svg('spring.svg');
+$m.integrate(:from(0), :to(20), :min-resolution(1));
+$m.render-svg('spring.svg', :x-axis('time'));

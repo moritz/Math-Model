@@ -119,11 +119,16 @@ method integrate($from = 0, $to = 10, $min-resolution = ($to - $from) / 20) {
     %!results;
 }
 
-method render-svg($filename, :$x-axis = 'time', :$width = 800, :$height = 600, :$title = 'Model output') {
+method render-svg(
+            $filename,
+            :$x-axis = 'time',
+            :$width = 800,
+            :$height = 600,
+            :$title = 'Model output') {
     my $f = open $filename, :w
             or die "Can't open file '$filename' for writing: $!";
-    my @values = map { %!results{$_} }, @.captures;
-    my @x = $x-axis eq 'time' ?? @!time !! %!results{$x-axis};
+    my @values = map { %!results{$_} }, @.captures.grep({ $_ ne $x-axis});
+    my @x = $x-axis eq 'time' ?? @!time !! %!results{$x-axis}.flat;
     my $svg = SVG::Plot.new(
         :$width,
         :$height,
