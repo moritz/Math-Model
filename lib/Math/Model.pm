@@ -98,6 +98,7 @@ method integrate($from = 0, $to = 10, $min-resolution = ($to - $from) / 20) {
     sub record($time, @values) {
         update-current-values($time, @values);
         @!time.push: $time;
+        say $time;
 
         for @.captures {
             %!results{$_}.push: %!current-values{$_};;
