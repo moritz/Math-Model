@@ -3,7 +3,6 @@ BEGIN { @*INC.push: '../lib' };
 
 use Math::Model;
 
-
 my $m = Math::Model.new(
     derivatives => {
         y_velocity      => 'y',
@@ -18,7 +17,7 @@ my $m = Math::Model.new(
         y               => 0,               # m
         y_velocity      => 20,              # m/s
     },
-    captures    => <y y_velocity>,
+    captures    => ('y', 'y_velocity'),
 );
 
 $m.integrate(:from(0), :to(4.2), :min-resolution(0.2));
