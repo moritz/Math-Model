@@ -31,7 +31,7 @@ has @.time;
 has $.numeric-error is rw = 0.0001;
 
 my sub param-names(&c) {
-    &c.signature.params».name».substr(1).grep: * !eq '_';
+    &c.signature.params».name».substr(1).grep({ $_ ne '_'});
 }
 
 method !params-for(&c) {
