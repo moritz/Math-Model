@@ -44,6 +44,8 @@ method topo-sort(*@vars) {
     sub topo(*@a) {
         for @a {
             next if %!inv.exists($_) || %seen{$_} || $_ eq 'time';
+            die "Undeclared variable '$_' used in model"
+                unless %.variables.exists($_);
             topo(param-names(%.variables{$_}));
             @order.push: $_;
             %seen{$_}++;
