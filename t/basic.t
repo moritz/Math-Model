@@ -32,4 +32,4 @@ is_approx %res<b>[*-1], 6, '... and got a roughly working result';
 
 # TODO: test various error conditions
 
-done_testing;
+done;
