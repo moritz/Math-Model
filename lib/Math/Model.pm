@@ -12,7 +12,7 @@ has %.variables;
 has %.initials;
 has @.captures is rw;
 
-has %!inv = %.derivatives.invert;
+has %!inv = %!derivatives.invert;
 # in Math::Model all variables are accessible by name
 # in contrast Math::RungeKutta uses vectors, so we need
 # to define an (arbitrary) ordering
