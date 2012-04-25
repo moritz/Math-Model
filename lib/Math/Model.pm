@@ -59,7 +59,7 @@ method topo-sort(*@vars) {
 
 method integrate(:$from = 0, :$to = 10, :$min-resolution = ($to - $from) / 20, :$verbose) {
     for %.derivatives -> $d {
-        die "There must be a variable defined for each derivative, missiing for '$d.key()'"
+        die "There must be a variable defined for each derivative, missing for '$d.key()'"
             unless %.variables.exists($d.key) || %!inv.exists($d.key);
         die "There must be an initial value defined for each derivative target, missing for '$d.value()'"
             unless %.initials.exists($d.value);
