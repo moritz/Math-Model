@@ -57,7 +57,7 @@ method topo-sort(*@vars) {
 }
 
 
-method integrate($from = 0, $to = 10, $min-resolution = ($to - $from) / 20, :$verbose) {
+method integrate(:$from = 0, :$to = 10, :$min-resolution = ($to - $from) / 20, :$verbose) {
     for %.derivatives -> $d {
         die "There must be a variable defined for each derivative, missiing for '$d.key()'"
             unless %.variables.exists($d.key) || %!inv.exists($d.key);
