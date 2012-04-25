@@ -1,7 +1,6 @@
 use v6;
 BEGIN { @*INC.push('blib', 'lib') };
 use Test;
-plan *;
 use Math::Model;
 
 my $m;
@@ -22,7 +21,7 @@ lives_ok {
 
 my %res;
 lives_ok { %res = $m.integrate(:from(0), :to(3)) }, 'can integrate the model';
-say %res.perl;
+diag "result: %res.perl()";
 
 is %res<time>[0],   0, 'time starts at 0';
 is %res<time>[*-1], 3, '... and it integrated up to the end time';
