@@ -85,7 +85,7 @@ method integrate(:$from = 0, :$to = 10, :$min-resolution = ($to - $from) / 20, :
         my @r;
         for %!inv{@!deriv-names} {
             my $v = %.variables{$_};
-            @r.push: defined $v
+            @r.push: $v.defined
                 ?? $v(|self!params-for($v))
                 !! %!current-values{$_};
         }
