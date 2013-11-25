@@ -43,9 +43,9 @@ method topo-sort(*@vars) {
     my @order;
     sub topo(*@a) {
         for @a {
-            next if %!inv.exists($_) || %seen{$_} || $_ eq 'time';
+            next if %!inv{$_}:exists || %seen{$_} || $_ eq 'time';
             die "Undeclared variable '$_' used in model"
-                unless %.variables.exists($_);
+                unless %.variables{$_}:exists;
             topo(param-names(%.variables{$_}));
             @order.push: $_;
             %seen{$_}++;
@@ -60,9 +60,9 @@ method topo-sort(*@vars) {
 method integrate(:$from = 0, :$to = 10, :$min-resolution = ($to - $from) / 20, :$verbose) {
     for %.derivatives -> $d {
         die "There must be a variable defined for each derivative, missing for '$d.key()'"
-            unless %.variables.exists($d.key) || %!inv.exists($d.key);
+            unless %.variables{$d.key}:exists || %!inv{$d.key}:exists;
         die "There must be an initial value defined for each derivative target, missing for '$d.value()'"
-            unless %.initials.exists($d.value);
+            unless %.initials{$d.value}:exists;
     }
 
     %!current-values       = %.initials;
