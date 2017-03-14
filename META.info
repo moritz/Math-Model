@@ -1,4 +1,5 @@
 {
+    "perl"        : "6.*",
     "name"        : "Math::Model",
     "version"     : "*",
     "description" : "Automagic integrator for models (first order ODEs)",
