@@ -28,5 +28,5 @@ for 30, 45, 60 -> $angle {
     $m.integrate(:from(0), :to(2 * 20 * sin($angle, Degrees) / 9.81), :min-resolution(0.2));
     $m.render-svg("throw-angle-$angle.svg", :x-axis<x>,
                   :width(300), :height(200),
-                  :title("Throwing at $angle degreees"));
+                  :title("Throwing at $angle degrees"));
 }
